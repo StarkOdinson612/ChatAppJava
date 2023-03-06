@@ -1,19 +1,16 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 public class User {
     private Socket socket;
     private String username;
-    private PrintWriter pw;
+    private ObjectOutputStream pw;
     private BufferedReader br;
 
     public User(Socket s) throws IOException, InterruptedException {
         socket = s;
         this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        pw = new PrintWriter(new PrintWriter(socket.getOutputStream()), true);
+        pw = new ObjectOutputStream(socket.getOutputStream());
 //        username = n;
 
         System.out.println("Awaiting connection...");
@@ -23,7 +20,7 @@ public class User {
         username = user;
     }
 
-    public User(Socket s, PrintWriter p) throws IOException, InterruptedException {
+    public User(Socket s, ObjectOutputStream p) throws IOException, InterruptedException {
         socket = s;
         br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         pw = p;
@@ -35,13 +32,20 @@ public class User {
         username = user;
     }
 
+    protected User(Socket s, boolean protectedConstructor) throws IOException {
+        socket = s;
+        this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        pw = new ObjectOutputStream(socket.getOutputStream());
+
+        this.username = "SERVER";
+    }
+
     public String getUsername()  { return username; }
     public String getIP() { return socket.getLocalAddress().toString().substring(1) + ":" + socket.getLocalPort(); }
 
-    public int writeMessage(String message)
-    {
+    public int writeMessage(String message) throws IOException {
         if (socket.isClosed()) { return -1; }
-        pw.println(message);
+        pw.writeChars(message + "\n");
         return 0;
     }
 
